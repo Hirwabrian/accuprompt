@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AccuPrompt — Companion Dashboard</title>
+<style>
+  :root{
+    --green:#14764f; --green-dk:#0f5e3f; --ink:#16242e; --slate:#3a4b56;
+    --mute:#8294a0; --line:#c9d4db; --panel:#eef4f8; --app:#f5f8fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--app); color:var(--ink); }
+  .topbar{ height:64px; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; padding:0 32px; }
+  .brand{ font-size:17px; font-weight:700; }
+  .brand .g{ color:var(--green); }
+  .who{ margin-left:auto; font-size:13px; color:var(--mute); }
+  .wrap{ max-width:1100px; margin:0 auto; padding:32px; }
+  h1{ font-size:22px; font-weight:700; }
+  .sub{ font-size:14px; color:var(--slate); margin-top:6px; }
+  .tiles{ display:flex; gap:20px; margin-top:24px; flex-wrap:wrap; }
+  .tile{ flex:1; min-width:180px; background:#fff; border:1px solid var(--line);
+    border-radius:12px; padding:20px 22px; }
+  .tile .n{ font-size:32px; font-weight:700; }
+  .tile .n .g{ color:var(--green); }
+  .tile .l{ font-size:13px; color:var(--mute); margin-top:4px; }
+  .panel{ background:#fff; border:1px solid var(--line); border-radius:12px;
+    margin-top:24px; overflow:hidden; }
+  .ph{ display:flex; align-items:center; justify-content:space-between;
+    padding:16px 22px; border-bottom:1px solid var(--line); }
+  .ph b{ font-size:15px; font-weight:600; }
+  .actions{ display:flex; gap:8px; }
+  .btn{ font:inherit; font-size:13px; border:1px solid var(--line); background:#fff;
+    border-radius:8px; padding:7px 12px; cursor:pointer; color:var(--slate); }
+  .btn:hover{ background:var(--app); }
+  .btn.danger{ color:#b5482f; border-color:#f0cfc6; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:11px; font-weight:600; color:var(--mute);
+    letter-spacing:.04em; padding:12px 22px; background:#fafcfd; border-bottom:1px solid var(--line); }
+  tbody td{ font-size:13px; color:var(--slate); padding:13px 22px; border-bottom:1px solid #eef2f4; }
+  tbody tr:last-child td{ border-bottom:none; }
+  .sid{ font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .tag{ display:inline-block; font-size:11px; font-weight:500; padding:3px 9px; border-radius:6px; }
+  .tag.lang{ background:var(--panel); color:#5b7a8c; }
+  .tag.proceed{ background:#fff0ed; color:#b5482f; }
+  .tag.edit{ background:#e9f6ef; color:var(--green-dk); }
+  .tag.cancel{ background:#eef2f4; color:var(--slate); }
+  .empty{ padding:48px 22px; text-align:center; color:var(--mute); font-size:14px; }
+  .empty code{ background:var(--panel); padding:2px 6px; border-radius:4px; }
+  .bandit{ padding:18px 22px; }
+  .barrow{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .barrow:last-child{ margin-bottom:0; }
+  .barrow .name{ width:110px; font-size:13px; font-weight:500; color:var(--ink); }
+  .barrow .track{ flex:1; height:22px; background:var(--app); border:1px solid var(--line);
+    border-radius:6px; overflow:hidden; position:relative; }
+  .barrow .fill{ height:100%; background:var(--green); border-radius:5px 0 0 5px; min-width:2px; }
+  .barrow .fill.fav{ background:var(--green-dk); }
+  .barrow .meta{ width:150px; font-size:12px; color:var(--mute); text-align:right;
+    font-variant-numeric:tabular-nums; }
+  .barrow .star{ color:var(--green-dk); font-weight:700; }
+  .bandit .hint{ font-size:12px; color:var(--mute); line-height:17px; margin-top:14px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Accu<span class="g">Prompt</span> · Companion</div>
+    <div class="who">Local telemetry · this browser</div>
+  </div>
+  <div class="wrap">
+    <h1>Session events</h1>
+    <div class="sub">Prompt interactions recorded during walk-through sessions. Data is read from local browser storage; no message content is included.</div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="panel">
+      <div class="ph">
+        <b>Recent events</b>
+        <div class="actions">
+          <button class="btn" id="refresh">Refresh</button>
+          <button class="btn" id="export">Export JSON</button>
+          <button class="btn danger" id="clear">Clear</button>
+        </div>
+      </div>
+      <div id="tablewrap"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph">
+        <b>Formulation selector (multi-armed bandit)</b>
+        <span class="who" id="policy-label">policy: —</span>
+      </div>
+      <div id="banditwrap"></div>
+    </div>
+  </div>
+  <script type="module" src="./dashboard.ts"></script>
+</body>
+</html>

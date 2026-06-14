@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  /* Mock WhatsApp-ish background so we can judge contrast/overlap. */
+  .wa {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 30% 70%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wa-left { background: #ffffff; border-right: 1px solid #e9edef; }
+  .wa-left .hdr { height: 60px; background: #f0f2f5; }
+  .wa-left .row { height: 72px; border-bottom: 1px solid #f0f2f5; display:flex; align-items:center; padding:0 16px; gap:12px;}
+  .wa-left .av { width:42px;height:42px;border-radius:50%;background:#dfe5e7;}
+  .wa-left .ln { flex:1; }
+  .wa-left .ln b{display:block;height:12px;width:55%;background:#e0e4e6;border-radius:3px;margin-bottom:8px;}
+  .wa-left .ln i{display:block;height:10px;width:75%;background:#eef1f2;border-radius:3px;}
+  .wa-right { background: #efeae2; position: relative; display:flex; flex-direction:column;}
+  .wa-right .topbar{height:60px;background:#f0f2f5;border-bottom:1px solid #e0e0e0;}
+  .wa-right .stream{flex:1;padding:24px;display:flex;flex-direction:column;gap:10px;justify-content:flex-end;}
+  .bubble{max-width:60%;padding:8px 12px;border-radius:8px;font-size:14px;color:#111b21;box-shadow:0 1px 0.5px rgba(0,0,0,.13);}
+  .in{background:#fff;align-self:flex-start;}
+  .out{background:#d9fdd3;align-self:flex-end;}
+  .composer{height:62px;background:#f0f2f5;display:flex;align-items:center;padding:0 16px;gap:12px;}
+  .composer .box{flex:1;height:42px;background:#fff;border-radius:21px;display:flex;align-items:center;padding:0 16px;color:#3b4a54;font-size:14px;}
+  .composer .send{width:42px;height:42px;border-radius:50%;background:#14764f;}
+</style>
+</head>
+<body>
+  <div class="wa">
+    <div class="wa-left">
+      <div class="hdr"></div>
+      <div class="row"><div class="av"></div><div class="ln"><b></b><i></i></div></div>
+      <div class="row"><div class="av"></div><div class="ln"><b></b><i></i></div></div>
+      <div class="row"><div class="av"></div><div class="ln"><b></b><i></i></div></div>
+    </div>
+    <div class="wa-right">
+      <div class="topbar"></div>
+      <div class="stream">
+        <div class="bubble in">Have you seen this message going around?</div>
+        <div class="bubble out">Yeah, about to forward it to the family group</div>
+      </div>
+      <div class="composer">
+        <div class="box">This is forwarded many times…</div>
+        <div class="send"></div>
+      </div>
+    </div>
+  </div>
+  <div id="mount"></div>
+  <script type="module" src="./preview-mount.js"></script>
+</body>
+</html>

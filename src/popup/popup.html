@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --green:#14764f; --ink:#16242e; --slate:#3a4b56; --mute:#8294a0;
+    --line:#c9d4db; --panel:#eef4f8; --app:#f5f8fa;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    width:320px; background:#fff; color:var(--ink); }
+  .accent{ height:5px; background:var(--green); }
+  .pad{ padding:20px 22px 22px; }
+  h1{ font-size:18px; font-weight:700; }
+  .rs{ font-size:12px; color:var(--mute); margin-top:3px; }
+  .statusbox{ background:var(--panel); border-radius:10px; padding:11px 14px;
+    display:flex; align-items:center; gap:11px; margin-top:16px; }
+  .statusbox .d{ width:10px;height:10px;border-radius:50%;background:var(--green);flex:none; }
+  .statusbox b{ font-size:14px; font-weight:500; display:block; }
+  .statusbox span{ font-size:12px; color:var(--slate); }
+  .lbl{ font-size:11px; font-weight:600; color:var(--mute); letter-spacing:.05em; margin-top:20px; }
+  .seg{ display:flex; background:var(--app); border:1px solid var(--line); border-radius:10px;
+    padding:4px; margin-top:9px; gap:4px; }
+  .seg button{ flex:1; height:34px; border:none; background:transparent; border-radius:7px;
+    font:inherit; font-size:14px; color:var(--mute); cursor:pointer; }
+  .seg button.sel{ background:#fff; border:1px solid var(--line); color:var(--ink); font-weight:500; }
+  .row{ display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); border-radius:10px; padding:11px 14px; margin-top:9px; }
+  .row b{ font-size:14px; font-weight:500; }
+  .sid{ font-size:12px; color:var(--mute); font-variant-numeric:tabular-nums; }
+  .link{ display:block; text-align:center; margin-top:18px; font-size:14px; font-weight:500;
+    color:var(--green); text-decoration:none; padding:11px; border:1px solid var(--line);
+    border-radius:9px; cursor:pointer; }
+  .link:hover{ background:var(--app); }
+  .note{ font-size:12px; color:var(--mute); line-height:17px; margin-top:16px; }
+</style>
+</head>
+<body>
+  <div class="accent"></div>
+  <div class="pad">
+    <h1>AccuPrompt</h1>
+    <div class="rs">Research prototype</div>
+
+    <div class="statusbox">
+      <span class="d"></span>
+      <div><b>Active on WhatsApp Web</b><span>Prompts appear at the moment of sharing</span></div>
+    </div>
+
+    <div class="lbl">PROMPT LANGUAGE</div>
+    <div class="seg" id="lang">
+      <button data-lang="en" class="sel">English</button>
+      <button data-lang="rw">Kinyarwanda</button>
+    </div>
+
+    <div class="lbl">WALK-THROUGH SESSION</div>
+    <div class="row"><b>Session</b><span class="sid" id="sid">—</span></div>
+
+    <a class="link" id="open-dash">Open companion dashboard →</a>
+
+    <div class="note">No message content is read, stored, or sent. Telemetry is stored locally in this browser.</div>
+  </div>
+  <script type="module" src="./popup.ts"></script>
+</body>
+</html>
