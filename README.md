@@ -16,7 +16,7 @@ misinformation sharing among Kinyarwanda- and English-speaking users in Rwanda.
 
 - **GitHub:** <https://github.com/Hirwabrian/accuprompt.git>
 - **Demo video:** <https://drive.google.com/file/d/1ExzcWSrCZJY15DO8oxqLDpvg74CLq7w7/view?usp=sharing>
-- **Related reports:**[text](AccuPrompt_Analysis_Discussion_Recommendations.docx) and [text](AccuPrompt_Testing_Report.docx)
+- **Related reports:**[Discussion Report](AccuPrompt_Analysis_Discussion_Recommendations.docx) and [Testing Report](AccuPrompt_Testing_Report.docx)
 
 ## What it does
 
