@@ -1,4 +1,5 @@
 # AccuPrompt — Prototype
+Video link to trial: https://drive.google.com/file/d/1271crwsxytM-KNybATYv5j3d11TO9JJs/view?usp=sharing
 
 A browser-extension prototype that presents a brief, autonomy-preserving
 **accuracy prompt** at the moment a user shares content on WhatsApp Web. It is
