@@ -1,4 +1,5 @@
 # AccuPrompt — Prototype
+
 Video link to trial: https://drive.google.com/file/d/1271crwsxytM-KNybATYv5j3d11TO9JJs/view?usp=sharing
 
 A browser-extension prototype that presents a brief, autonomy-preserving
@@ -15,6 +16,7 @@ misinformation sharing among Kinyarwanda- and English-speaking users in Rwanda.
 
 - **GitHub:** <https://github.com/Hirwabrian/accuprompt.git>
 - **Demo video:** <https://drive.google.com/file/d/1ExzcWSrCZJY15DO8oxqLDpvg74CLq7w7/view?usp=sharing>
+- **Related reports:**[text](AccuPrompt_Analysis_Discussion_Recommendations.docx) and [text](AccuPrompt_Testing_Report.docx)
 
 ## What it does
 
