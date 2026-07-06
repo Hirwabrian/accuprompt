@@ -1,17 +1,46 @@
 """
 simulate.py — Monte Carlo simulation of the AccuPrompt formulation selector.
 
-WHAT THIS SHOWS (and what it does NOT):
-  - It demonstrates that the implemented epsilon-greedy bandit, run over many
-    interactions, learns to favour the formulation with the higher reflective
-    rate, and accrues less regret than uniform (random-equal) selection.
-  - The per-formulation "true reflective rates" below are ASSUMED VALUES chosen
-    for illustration. They are NOT empirical findings and do NOT claim any
-    formulation is actually better for real users. The simulation validates the
-    ALGORITHM, not the formulations. Real reflective rates would come from the
-    cognitive walk-throughs / a deployed study.
+==============================================================================
+WHAT THIS IS
+==============================================================================
+AccuPrompt must choose which of four accuracy-prompt formulations to show. It
+does this with an EPSILON-GREEDY MULTI-ARMED BANDIT — the standard textbook
+algorithm for the exploration vs. exploitation trade-off. Each formulation is an
+"arm". The policy:
 
-Outputs PNGs into simulation/figures/.
+  1. Cold start : show any never-shown arm first (optimistic initialisation).
+  2. Explore    : with probability EPSILON (0.25), pick a uniformly random arm.
+  3. Exploit    : otherwise pick the arm with the highest observed mean reward.
+
+Reward: a reflective outcome (user reconsiders or cancels) = 1; immediate share
+= 0. An arm's estimated quality is reward / shown.
+
+This script imports that SAME policy from bandit.py (a faithful port of the
+extension's src/content/selector.ts) and runs it over many simulated
+interactions to show it learns.
+
+==============================================================================
+WHAT IT SHOWS  (and, importantly, what it does NOT)
+==============================================================================
+SHOWS  : run over many interactions, the bandit concentrates selection on the
+         arm with the higher reflective rate and accrues less REGRET (reward
+         lost vs. always picking the best arm) than uniform/equal selection.
+
+DOES NOT SHOW : that any formulation is actually better for real users. The
+         per-arm "true reflective rates" below are ASSUMED, ILLUSTRATIVE values
+         chosen to make the demo legible. They are NOT findings. The simulation
+         validates the ALGORITHM, not the formulations. Real rates would come
+         from the cognitive walk-throughs / a deployed study.
+
+Three figures are written to simulation/figures/:
+  regret.png     — cumulative regret, bandit vs uniform (lower = better).
+  arm_share.png  — share of selections per arm over time (bandit converges).
+  estimates.png  — learned per-arm estimates vs the assumed true rates.
+
+The annotated notebook (bandit_simulation.ipynb) walks through the same analysis
+with explanation between each step; this script is the headless equivalent.
+==============================================================================
 """
 
 from __future__ import annotations
@@ -45,19 +74,26 @@ COLORS = ["#4A6FA5", "#B98B36", "#5A8C5A", "#6A4A8C"]
 
 
 def simulate(selector_factory, n_steps: int, seed: int):
-    """Run one selector for n_steps; return (cumulative_regret, arm_choice_history)."""
-    rng_py = __import__("random").Random(seed)
-    rng_np = np.random.default_rng(seed)
+    """Run one selector for n_steps interactions.
+
+    Each step: the selector picks an arm; a synthetic user produces a reflective
+    outcome (reward 1) with probability TRUE_RATES[arm], else 0; the selector
+    learns from that reward; we accumulate regret. Returns (cumulative_regret,
+    arm_choice_history).
+    """
+    rng_py = __import__("random").Random(seed)   # randomness for selector choices
+    rng_np = np.random.default_rng(seed)         # randomness for user outcomes
     sel = selector_factory(rng_py)
     cum_regret = np.zeros(n_steps)
     choices = []
     running = 0.0
     for t in range(n_steps):
-        arm = sel.select()
-        # synthetic user: reflective outcome with prob = TRUE_RATES[arm]
-        reward = 1.0 if rng_np.random() < TRUE_RATES[arm] else 0.0
-        sel.update(arm, reward)
-        # regret = best possible expected reward - this arm's expected reward
+        arm = sel.select()                                          # algorithm chooses
+        reward = 1.0 if rng_np.random() < TRUE_RATES[arm] else 0.0  # user responds
+        sel.update(arm, reward)                                     # algorithm learns
+        # regret = (best arm's expected reward) - (chosen arm's expected reward),
+        # summed over time. A learner keeps this growing slowly; a non-learner
+        # grows it linearly.
         running += (BEST_RATE - TRUE_RATES[arm])
         cum_regret[t] = running
         choices.append(arm)

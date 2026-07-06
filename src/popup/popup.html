@@ -29,6 +29,10 @@
   .row{ display:flex; align-items:center; justify-content:space-between;
     background:var(--panel); border-radius:10px; padding:11px 14px; margin-top:9px; }
   .row b{ font-size:14px; font-weight:500; }
+  .stats{ display:flex; gap:9px; margin-top:9px; }
+  .stat{ flex:1; background:var(--panel); border-radius:10px; padding:11px 14px; text-align:center; }
+  .stat .sn{ display:block; font-size:22px; font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; }
+  .stat .sl{ display:block; font-size:11px; color:var(--mute); margin-top:2px; }
   .sid{ font-size:12px; color:var(--mute); font-variant-numeric:tabular-nums; }
   .link{ display:block; text-align:center; margin-top:18px; font-size:14px; font-weight:500;
     color:var(--green); text-decoration:none; padding:11px; border:1px solid var(--line);
@@ -54,12 +58,30 @@
       <button data-lang="rw">Kinyarwanda</button>
     </div>
 
+    <div class="lbl">STUDY ARM</div>
+    <div class="seg" id="rag">
+      <button data-rag="on" class="sel">Evidence on</button>
+      <button data-rag="off">Evidence off</button>
+    </div>
+    <div class="seg" id="gate">
+      <button data-gate="on" class="sel">Smart trigger</button>
+      <button data-gate="off">Prompt every send</button>
+    </div>
+    <div class="note" style="margin-top:9px">
+      Hold the formulation schedule constant across participants; vary only one of
+      these at a time so it is the single difference between arms.
+    </div>
+
     <div class="lbl">WALK-THROUGH SESSION</div>
     <div class="row"><b>Session</b><span class="sid" id="sid">—</span></div>
+    <div class="stats" id="stats">
+      <div class="stat"><span class="sn" id="stat-shown">0</span><span class="sl">prompts shown</span></div>
+      <div class="stat"><span class="sn" id="stat-rate">—</span><span class="sl">reconsider rate</span></div>
+    </div>
 
     <a class="link" id="open-dash">Open companion dashboard →</a>
 
-    <div class="note">No message content is read, stored, or sent. Telemetry is stored locally in this browser.</div>
+    <div class="note">Message text is inspected locally and ephemerally to decide whether to prompt and to find related fact-checks; it is never stored. Only the fact-check query is sent to the local retrieval backend. Telemetry (no message content) is stored locally in this browser.</div>
   </div>
   <script type="module" src="./popup.ts"></script>
 </body>

@@ -16,16 +16,21 @@ import type { PromptOutcome } from './overlay';
 export interface InteractionEvent {
   id: string;
   sessionId: string;
-  platform: 'whatsapp' | 'facebook' | 'x';
+  platform: 'whatsapp' | 'messenger' | 'facebook' | 'x';
   formulation: FormulationType;
   language: Lang;
-  outcome: PromptOutcome;
-  trigger: 'click' | 'enter' | 'preview';
+  outcome: PromptOutcome | 'evidence_expand' | 'gate_skip';
+  trigger: 'click' | 'enter' | 'preview' | 'rag' | 'gate';
   timestamp: string; // ISO 8601
+  /** Optional free-text annotation (e.g. the gate's skip reason). */
+  note?: string;
 }
 
 export const EVENTS_KEY = 'accuprompt.events.v1';
 export const SESSION_KEY = 'accuprompt.session.v1';
+export const RAG_FLAG_KEY = 'accuprompt.rag.enabled.v1';
+export const LANG_KEY = 'accuprompt.lang.v1';
+export const GATE_FLAG_KEY = 'accuprompt.gate.enabled.v1';
 
 export function makeId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);

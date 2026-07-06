@@ -24,7 +24,14 @@ const OUTCOME_LABEL: Record<string, { text: string; cls: string }> = {
   proceed: { text: 'Shared anyway', cls: 'proceed' },
   edit: { text: 'Reconsidered', cls: 'edit' },
   cancel: { text: 'Cancelled', cls: 'cancel' },
+  evidence_expand: { text: 'Opened evidence', cls: 'edit' },
+  gate_skip: { text: 'Gate: no prompt', cls: 'cancel' },
 };
+
+// The three outcomes that represent an actual shown-prompt decision. Other
+// event types (gate_skip, evidence_expand) are signals, NOT prompt outcomes,
+// and must be excluded from the reflective-rate denominator.
+const PROMPT_OUTCOMES = new Set(['proceed', 'edit', 'cancel']);
 
 function tile(n: string, label: string, green = false): string {
   return `<div class="tile"><div class="n">${green ? `<span class="g">${n}</span>` : n}</div><div class="l">${label}</div></div>`;
@@ -32,15 +39,24 @@ function tile(n: string, label: string, green = false): string {
 
 function render(events: InteractionEvent[]): void {
   const sessions = new Set(events.map((e) => e.sessionId));
-  const reflective = events.filter((e) => e.outcome !== 'proceed').length;
-  const total = events.length;
-  const pct = total > 0 ? Math.round((reflective / total) * 100) : 0;
+
+  // Only real prompt outcomes count toward "prompts shown" and the paused rate.
+  const promptEvents = events.filter((e) => PROMPT_OUTCOMES.has(e.outcome));
+  const shown = promptEvents.length;
+  const reflective = promptEvents.filter((e) => e.outcome !== 'proceed').length;
+  const pct = shown > 0 ? Math.round((reflective / shown) * 100) : 0;
+
+  // New signals, surfaced separately so they inform but don't distort the rate.
+  const gateSkips = events.filter((e) => e.outcome === 'gate_skip').length;
+  const evidenceOpens = events.filter((e) => e.outcome === 'evidence_expand').length;
 
   tiles.innerHTML =
     tile(String(sessions.size), 'Sessions') +
-    tile(String(total), 'Prompts shown') +
+    tile(String(shown), 'Prompts shown') +
     tile(String(reflective), 'Reconsidered or cancelled', true) +
-    tile(total > 0 ? `${pct}%` : '—', 'Paused before sharing');
+    tile(shown > 0 ? `${pct}%` : '—', 'Paused before sharing') +
+    tile(String(gateSkips), 'Gate skips (no prompt)') +
+    tile(String(evidenceOpens), 'Evidence panels opened');
 
   if (events.length === 0) {
     tablewrap.innerHTML =
@@ -54,9 +70,13 @@ function render(events: InteractionEvent[]): void {
       const o = OUTCOME_LABEL[e.outcome] ?? { text: e.outcome, cls: 'cancel' };
       const langLabel = e.language === 'rw' ? 'Kinyarwanda' : 'English';
       const ts = new Date(e.timestamp).toLocaleString();
+      // gate_skip events have no shown formulation; show a dash instead.
+      const formCell = e.outcome === 'gate_skip'
+        ? `<span class="muted">${e.note ?? '—'}</span>`
+        : (FORMULATION_LABEL[e.formulation] ?? e.formulation);
       return `<tr>
         <td><span class="sid">${e.sessionId}</span></td>
-        <td>${FORMULATION_LABEL[e.formulation] ?? e.formulation}</td>
+        <td>${formCell}</td>
         <td><span class="tag lang">${langLabel}</span></td>
         <td><span class="tag ${o.cls}">${o.text}</span></td>
         <td>${ts}</td>
@@ -65,7 +85,7 @@ function render(events: InteractionEvent[]): void {
     .join('');
 
   tablewrap.innerHTML = `<table>
-    <thead><tr><th>SESSION</th><th>FORMULATION</th><th>LANGUAGE</th><th>OUTCOME</th><th>TIMESTAMP</th></tr></thead>
+    <thead><tr><th>SESSION</th><th>FORMULATION / NOTE</th><th>LANGUAGE</th><th>OUTCOME</th><th>TIMESTAMP</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }

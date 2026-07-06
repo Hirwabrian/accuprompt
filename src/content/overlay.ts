@@ -13,12 +13,18 @@
 
 import { VARIANTS, UI, type Lang, type FormulationType } from './content-data';
 
+import { retrieve, buildPanel, RAG_STYLE } from './rag';
+
 export type PromptOutcome = 'proceed' | 'edit' | 'cancel';
 
 export interface ShowOptions {
   lang: Lang;
   variant: FormulationType;
   onOutcome: (outcome: PromptOutcome) => void;
+  /** If set, the claim text to retrieve related fact-checks for (RAG on). */
+  ragClaim?: string;
+  /** Called the first time the user expands the evidence panel (telemetry). */
+  onEvidenceExpand?: () => void;
 }
 
 const HOST_ID = 'accuprompt-overlay-host';
@@ -135,6 +141,7 @@ const STYLE = `
 `;
 
 let activeHost: HTMLElement | null = null;
+let lastOpts: ShowOptions | null = null;
 
 export function dismiss(): void {
   if (activeHost) {
@@ -142,6 +149,21 @@ export function dismiss(): void {
     activeHost = null;
     document.removeEventListener('keydown', onKeydown, true);
   }
+}
+
+/** Whether a prompt is currently on screen. */
+export function isPromptOpen(): boolean {
+  return activeHost !== null;
+}
+
+/**
+ * Re-render the currently-open prompt in a new language. Does nothing if no
+ * prompt is open. Preserves the variant, RAG claim, and outcome callback so the
+ * re-shown prompt behaves identically — only the language changes.
+ */
+export function refreshLanguage(lang: Lang): void {
+  if (!activeHost || !lastOpts) return;
+  showPrompt({ ...lastOpts, lang });
 }
 
 let currentOnOutcome: ((o: PromptOutcome) => void) | null = null;
@@ -159,6 +181,7 @@ function onKeydown(e: KeyboardEvent): void {
 export function showPrompt(opts: ShowOptions): void {
   // Only ever one prompt at a time.
   dismiss();
+  lastOpts = opts;
 
   const variant = VARIANTS.find((v) => v.id === opts.variant) ?? VARIANTS[0];
   const strings = variant.strings[opts.lang];
@@ -169,7 +192,7 @@ export function showPrompt(opts: ShowOptions): void {
   const shadow = host.attachShadow({ mode: 'open' });
 
   const style = document.createElement('style');
-  style.textContent = STYLE;
+  style.textContent = STYLE + RAG_STYLE;
   shadow.appendChild(style);
 
   const backdrop = document.createElement('div');
@@ -218,6 +241,17 @@ export function showPrompt(opts: ShowOptions): void {
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) finish('cancel');
   });
+
+  // --- RAG evidence panel (only when a claim is provided, i.e. RAG enabled) ---
+  if (opts.ragClaim && opts.ragClaim.trim()) {
+    const panel = buildPanel(() => opts.onEvidenceExpand?.(), opts.lang);
+    card.appendChild(panel.node);
+    // Fire retrieval in the BACKGROUND; reveal the toggle once it resolves.
+    void retrieve(opts.ragClaim).then((result) => {
+      // Only fill if this prompt is still on screen.
+      if (activeHost === host) panel.fill(result);
+    });
+  }
 
   backdrop.appendChild(card);
   shadow.appendChild(backdrop);
