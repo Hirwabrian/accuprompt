@@ -15,7 +15,7 @@ Python in `bandit.py`.
 
 ## Run it
 ```bash
-pip install numpy matplotlib
+pip install -r requirements.txt
 python simulate.py                 # regenerate the figures
 # or open bandit_simulation.ipynb in Jupyter and Run All
 ```

@@ -1,7 +1,5 @@
 # AccuPrompt — Prototype
 
-Video link to trial: https://drive.google.com/file/d/1271crwsxytM-KNybATYv5j3d11TO9JJs/view?usp=sharing
-
 A browser-extension prototype that presents a brief, autonomy-preserving
 **accuracy prompt** at the moment a user shares content on WhatsApp Web. It is
 the software artifact for a BSc Software Engineering capstone (ALU) on reducing
@@ -65,7 +63,9 @@ npm run build        # produces dist/ as a loadable unpacked extension
 npm run dev
 ```
 
-Load it in Chrome or Edge:
+Load it in Chrome or Edge (any Chromium-based MV3 browser). Firefox and Safari
+are not supported — the extension has not been built or tested against their
+extension APIs.
 
 1. Go to `chrome://extensions`
 2. Enable **Developer mode** (top right)
@@ -73,6 +73,16 @@ Load it in Chrome or Edge:
    (for `npm run dev`, CRXJS prints which folder to load)
 4. Open <https://web.whatsapp.com> and log in
 5. Open the console (F12) — you should see `[AccuPrompt] content script loaded`
+
+### Tests
+
+```bash
+npm test   # runs src/content/gate.test.ts (the triggering gate's decision logic)
+```
+
+This is currently the only automated test in the repo — there's no test
+coverage yet for the selector/bandit, RAG, or backend, and no CI is configured
+to run it automatically on push.
 
 ## Using it
 
@@ -96,11 +106,14 @@ On WhatsApp Web, with the page focused:
 
 Interface mockups (Figma + rendered PNGs) are in `designs/`:
 
-- `0_cover.png` — title frame
-- `1_overlay.png` — the accuracy prompt over WhatsApp Web
-- `2_formulations.png` — the four formulations
-- `3_popup.png` — the extension popup
-- `4_dashboard.png` — the companion dashboard
+| | |
+|---|---|
+| `1_overlay.png` — the accuracy prompt over WhatsApp Web | ![overlay](designs/1_overlay.png) |
+| `2_formulations.png` — the four formulations | ![formulations](designs/2_formulations.png) |
+| `3_popup.png` — the extension popup | ![popup](designs/3_popup.png) |
+| `4_dashboard.png` — the companion dashboard | ![dashboard](designs/4_dashboard.png) |
+
+(`0_cover.png` is the title frame, omitted above.)
 
 There is **no circuit diagram**: this is a software (FullStack) project with no
 hardware. The system architecture, class, ER, and sequence diagrams are in the
@@ -125,12 +138,17 @@ src/
   popup/               extension popup (language, study-arm toggles, session, dashboard)
   dashboard/           companion dashboard (reads local telemetry)
 
-rag_build/             offline corpus prep + retrieval backend (Python; see below)
-  step1_audit_local.py   audit the AVeriTeC corpus
-  step2_embed.py         embed claim+justification with MiniLM -> corpus.npz
-  step5_translate.py     draft Kinyarwanda translation (NLLB-600M) -> corpus_rw.npz
-  backend.py             FastAPI retrieval service (localhost:8000)
+backend.py             FastAPI retrieval service (localhost:8000); see "Retrieval backend" below
+requirements.txt       Python deps for backend.py
+corpus.npz             AVeriTeC claim+justification embeddings (English)
+corpus_rw.npz          same, with draft Kinyarwanda translations
+simulation/            offline bandit simulation (Python; see simulation/README.md)
 ```
+
+The offline corpus-prep scripts (audit → embed with MiniLM → optional Kinyarwanda
+translation with NLLB-600M) were run once, out-of-repo (Colab), to produce
+`corpus.npz` / `corpus_rw.npz`. Those prep scripts are not part of this repo —
+only their output (the `.npz` files) and the serving side (`backend.py`) are.
 
 ## Machine-learning component (formulation selector)
 
@@ -183,22 +201,28 @@ language model in the loop, so it **cannot generate text or fabricate a verdict*
 
 - **Corpus:** [AVeriTeC](https://fever.ai/dataset/averitec.html) (English,
   CC BY-NC). ~3,000 real-world claims with human verdicts and justifications.
-  **The corpus is not committed to this repo** (licence); see `rag_build/` to
-  rebuild it.
-- **Pipeline (offline, one-time, Colab):** audit → embed `claim + justification`
-  with `all-MiniLM-L6-v2` → `corpus.npz`. Optionally draft-translate a subset of
-  justifications into Kinyarwanda with `NLLB-200-distilled-600M` → `corpus_rw.npz`.
+  The pre-computed embeddings (`corpus.npz`, `corpus_rw.npz`) **are committed to
+  this repo** as build artifacts of that one-time offline pipeline. AVeriTeC's
+  licence is CC BY-NC (non-commercial); anyone redistributing this repo or its
+  derivatives should review that licence's terms before commercial use.
+- **Pipeline (offline, one-time, run in Colab, not part of this repo):** audit →
+  embed `claim + justification` with `all-MiniLM-L6-v2` → `corpus.npz`.
+  Optionally draft-translate a subset of justifications into Kinyarwanda with
+  `NLLB-200-distilled-600M` → `corpus_rw.npz`. The prep scripts themselves were
+  not committed; only their output (the two `.npz` files) was.
 - **Backend (laptop):** `backend.py` is a FastAPI service. It loads the corpus
   once, embeds an incoming query with the same MiniLM model, and returns the
   top matches by cosine similarity above a threshold (no vector DB needed at this
   scale). Runs at `http://127.0.0.1:8000`.
 
   ```bash
-  cd rag_build
-  pip install fastapi uvicorn sentence-transformers numpy
+  pip install -r requirements.txt
   uvicorn backend:app --port 8000     # add --reload for development
   # health check: http://127.0.0.1:8000/health  ·  docs: /docs
   ```
+
+  The port (`8000`) and similarity threshold (`0.5`) are constants inside
+  `backend.py`, not environment variables — edit the file directly to change them.
 
   Start the backend **before** opening WhatsApp Web. The extension calls it via
   `host_permissions` for `127.0.0.1:8000`. If the backend is down, retrieval
@@ -282,10 +306,19 @@ feasible inside the closed mobile apps without an accessibility service).
   leaves the browser, to localhost. With both disabled, the extension is fully
   content-blind. (Earlier prototype copy described it as unconditionally
   content-blind — that is no longer accurate and has been corrected.)
-- **RAG is retrieval-only** over an English, CC BY-NC corpus that is **not in this
-  repo**; it cannot generate or alter a verdict. The panel shows nothing for
-  out-of-corpus messages by design.
+- **RAG is retrieval-only** over an English, CC BY-NC corpus (embeddings
+  committed to this repo as `corpus.npz` / `corpus_rw.npz`); it cannot generate
+  or alter a verdict. The panel shows nothing for out-of-corpus messages by design.
 - **The forwarded-status signal may never fire** at the interception point; the
   gate does not depend on it.
 - **A/B supports qualitative impressions, not measured efficacy**, at this sample
   size. RAG-vs-no-RAG and gate-vs-no-gate are the only manipulated axes.
+- **No CI is configured.** `npm test` (the gate's unit tests) must be run
+  manually; nothing runs it automatically on push. There is no test coverage
+  for the selector/bandit, RAG, or backend.
+
+## License
+
+AccuPrompt's own source code is MIT-licensed — see [LICENSE](LICENSE). The
+AVeriTeC corpus embeddings (`corpus.npz`, `corpus_rw.npz`) are governed
+separately by AVeriTeC's CC BY-NC licence (see "Retrieval backend" above).
